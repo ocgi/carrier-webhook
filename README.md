@@ -1,0 +1,1 @@
+This is a webhook for validating and mutating gs, gss and squad, e.g. some fields in spec
