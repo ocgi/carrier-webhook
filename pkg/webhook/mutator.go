@@ -57,7 +57,7 @@ func gameServerPod(pod *corev1.Pod) bool {
 	if pod.Labels == nil {
 		return false
 	}
-	return pod.Labels[carrierutil.GameServerPodLabel] != ""
+	return pod.Labels[carrierutil.GameServerPodLabelKey] != ""
 }
 
 // defaultSideCar return a simple sidecar caontainer
@@ -130,7 +130,7 @@ func EnsureDefaultsForSquad(squad *v1alpha1.Squad) *v1alpha1.Squad {
 	}
 	if squadCopy.Spec.Selector.MatchLabels == nil {
 		squadCopy.Spec.Selector.MatchLabels = map[string]string{
-			carrierutil.SquadNameLabel: squadCopy.Name,
+			carrierutil.GameServerPodLabelKey: squadCopy.Name,
 		}
 	}
 	// setting update strategy
