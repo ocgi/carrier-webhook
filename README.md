@@ -21,7 +21,3 @@ Build and deploy the carrier-webhook.
 ## Documentation
 
 You can view the full documentation from the [website](https://ocgi.github.io).
-
-## License
-
-Carrier is licensed under the Apache License, Version 2.0. See [LICENSE](./LICENSE.md) for the full license text.
