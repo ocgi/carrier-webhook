@@ -53,6 +53,13 @@ func ValidateGameServerUpdate(oldGS, newGS *carrierv1alpha1.GameServer) field.Er
 		errs = append(errs, field.Forbidden(field.NewPath("template.spec.deletableGates"), "deletableGates cannot be updated after creation"))
 
 	}
+
+	// allow dynamic port allocation
+	for i := range oldGS.Spec.Ports {
+		oldGS.Spec.Ports[i].HostPortRange = newGS.Spec.Ports[i].HostPortRange
+		oldGS.Spec.Ports[i].HostPort = newGS.Spec.Ports[i].HostPort
+	}
+
 	if !apiequality.Semantic.DeepEqual(oldGS.Spec.Ports, newGS.Spec.Ports) {
 		errs = append(errs, field.Forbidden(field.NewPath("template.spec.ports"), "ports cannot be updated after creation"))
 	}
