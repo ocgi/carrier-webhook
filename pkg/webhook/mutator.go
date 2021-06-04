@@ -116,6 +116,28 @@ func EnsureDefaultForGameServer(gs *v1alpha1.GameServer) *v1alpha1.GameServer {
 	return gsCopy
 }
 
+// EnsureDefaultsForGameServerSet ensure some default fields of GameServerSet
+func EnsureDefaultsForGameServerSet(gsSet *v1alpha1.GameServerSet) *v1alpha1.GameServerSet {
+	gsSetCopy := gsSet.DeepCopy()
+	// setting selector
+	if gsSetCopy.Spec.Selector == nil {
+		gsSetCopy.Spec.Selector = &metav1.LabelSelector{}
+	}
+	if gsSetCopy.Spec.Selector.MatchLabels == nil {
+		gsSetCopy.Spec.Selector.MatchLabels = map[string]string{
+			carrierutil.GameServerSetLabelKey: gsSetCopy.Name,
+		}
+	}
+	// setting scheduling strategy
+	if gsSetCopy.Spec.Scheduling == "" {
+		gsSetCopy.Spec.Scheduling = v1alpha1.MostAllocated
+	}
+	if gsSetCopy.Spec.Template.Spec.Template.Spec.ServiceAccountName == "" {
+		gsSetCopy.Spec.Template.Spec.Template.Spec.ServiceAccountName = defaultServiceAccountName
+	}
+	return gsSetCopy
+}
+
 // EnsureDefaultsForSquad ensure some default fields of Squad
 func EnsureDefaultsForSquad(squad *v1alpha1.Squad) *v1alpha1.Squad {
 	squadCopy := squad.DeepCopy()
@@ -130,7 +152,7 @@ func EnsureDefaultsForSquad(squad *v1alpha1.Squad) *v1alpha1.Squad {
 	}
 	if squadCopy.Spec.Selector.MatchLabels == nil {
 		squadCopy.Spec.Selector.MatchLabels = map[string]string{
-			carrierutil.GameServerPodLabelKey: squadCopy.Name,
+			carrierutil.SquadNameLabelKey: squadCopy.Name,
 		}
 	}
 	// setting update strategy
