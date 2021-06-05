@@ -308,6 +308,9 @@ func (whsvr *webhookServer) forGameServerSet(req *v1beta1.AdmissionRequest) ([]b
 		if len(errs) != 0 {
 			return nil, errs, errs.ToAggregate()
 		}
+		newGameServerSet := EnsureDefaultsForGameServerSet(&gameServerSet)
+		patch, err := util.CreateJsonPatch(gameServerSet, newGameServerSet)
+		return patch, nil, err
 	}
 	if req.Operation == v1beta1.Update {
 		if err := json.Unmarshal(req.OldObject.Raw, &oldGameServerSet); err != nil {

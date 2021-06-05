@@ -119,7 +119,7 @@ func addHealthCheck(pw *k8testing.PodWrapper) *k8testing.PodWrapper {
 }
 
 func defaultTestPod() *k8testing.PodWrapper {
-	pw := k8testing.MakePod().Label(carrierutil.GameServerPodLabel, "test")
+	pw := k8testing.MakePod().Label(carrierutil.GameServerPodLabelKey, "test")
 	pw.Spec.Containers = append(pw.Spec.Containers, v1.Container{
 		Name: "test",
 		VolumeMounts: []v1.VolumeMount{
@@ -186,7 +186,7 @@ func filledSquad() *carrierv1alpha1.Squad {
 			RevisionHistoryLimit: &his,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					carrierutil.SquadNameLabel: "test",
+					carrierutil.SquadNameLabelKey: "test",
 				},
 			},
 		},
