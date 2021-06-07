@@ -36,6 +36,7 @@ import (
 	"github.com/ocgi/carrier-webhook/pkg/webhook"
 )
 
+// Run runs the webhook
 func Run(s *ServerRunOptions) error {
 	stopCh := util.SetupSignalHandler()
 
@@ -119,6 +120,7 @@ func getTLSConfig(s *ServerRunOptions) (*tls.Config, error) {
 	return tlsConfig, nil
 }
 
+// NewSideCarConfig initializes the config of side car container
 func NewSideCarConfig(s *ServerRunOptions) *webhook.SideCarConfig {
 	cpu := resource.MustParse(s.CPU)
 	memory := resource.MustParse(s.Memory)

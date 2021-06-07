@@ -22,23 +22,34 @@ import (
 )
 
 var (
+	// Version of vebhook
 	Version = "unknown"
 )
 
+// ServerRunOptions is the webhook options.
 type ServerRunOptions struct {
-	Address     string
-	Port        int
-	TlsCA       string
-	TlsCert     string
-	TlsKey      string
+	// Address of webhook listening
+	Address string
+	// Port of webhook listening
+	Port    int
+	TlsCA   string
+	TlsCert string
+	TlsKey  string
+	// ShowVersion prints version if true
 	ShowVersion bool
-	HttpPort    int
-	GrpcPort    int
-	Image       string
-	CPU         string
-	Memory      string
+	// HttpPort of side car
+	HttpPort int
+	// GRPC port of side car
+	GrpcPort int
+	// Image of side car
+	Image string
+	// CPU of side car
+	CPU string
+	//Memory of side car
+	Memory string
 }
 
+// NewServerRunOptions creates new run options
 func NewServerRunOptions() *ServerRunOptions {
 	options := &ServerRunOptions{}
 	options.addFlags()
@@ -46,7 +57,7 @@ func NewServerRunOptions() *ServerRunOptions {
 }
 
 func (s *ServerRunOptions) addFlags() {
-	pflag.StringVar(&s.Address, "address", "0.0.0.0", "The address of scheduler manager.")
+	pflag.StringVar(&s.Address, "address", "0.0.0.0", "The address of webhoook.")
 	pflag.IntVar(&s.Port, "port", 8080, "The port of scheduler manager.")
 	pflag.StringVar(&s.TlsCert, "tlscert", "", "Path to TLS certificate file")
 	pflag.StringVar(&s.TlsKey, "tlskey", "", "Path to TLS key file")
@@ -59,6 +70,7 @@ func (s *ServerRunOptions) addFlags() {
 	pflag.StringVar(&s.Memory, "sidecar-memory", "100M", "grpc port for side car.")
 }
 
+// Validate address
 func (s *ServerRunOptions) Validate() error {
 	address := net.ParseIP(s.Address)
 	if address.To4() == nil {
