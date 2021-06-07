@@ -47,10 +47,12 @@ func ValidateGameServerUpdate(oldGS, newGS *carrierv1alpha1.GameServer) field.Er
 		oldGS.Spec.Template.Spec.Containers[idx].Image = c.Image
 	}
 	if !apiequality.Semantic.DeepEqual(oldGS.Spec.ReadinessGates, newGS.Spec.ReadinessGates) {
-		errs = append(errs, field.Forbidden(field.NewPath("template.spec.readinessGates"), "readinessGates cannot be updated after creation"))
+		errs = append(errs, field.Forbidden(field.NewPath("template.spec.readinessGates"),
+			"readinessGates cannot be updated after creation"))
 	}
 	if !apiequality.Semantic.DeepEqual(oldGS.Spec.DeletableGates, newGS.Spec.DeletableGates) {
-		errs = append(errs, field.Forbidden(field.NewPath("template.spec.deletableGates"), "deletableGates cannot be updated after creation"))
+		errs = append(errs, field.Forbidden(field.NewPath("template.spec.deletableGates"),
+			"deletableGates cannot be updated after creation"))
 
 	}
 
@@ -61,11 +63,13 @@ func ValidateGameServerUpdate(oldGS, newGS *carrierv1alpha1.GameServer) field.Er
 	}
 
 	if !apiequality.Semantic.DeepEqual(oldGS.Spec.Ports, newGS.Spec.Ports) {
-		errs = append(errs, field.Forbidden(field.NewPath("template.spec.ports"), "ports cannot be updated after creation"))
+		errs = append(errs, field.Forbidden(field.NewPath("template.spec.ports"),
+			"ports cannot be updated after creation"))
 	}
 	// allow update object meta
 	if !apiequality.Semantic.DeepEqual(oldGS.Spec.Template.Spec, newGS.Spec.Template.Spec) {
-		errs = append(errs, field.Forbidden(field.NewPath("template.spec.template"), "template cannot be updated after creation"))
+		errs = append(errs, field.Forbidden(field.NewPath("template.spec.template"),
+			"template cannot be updated after creation"))
 	}
 	return errs
 }
@@ -75,13 +79,15 @@ func validateSpec(gss *carrierv1alpha1.GameServerSpec) field.ErrorList {
 	var errs field.ErrorList
 	for _, p := range gss.Ports {
 		if p.ContainerPortRange != nil && p.ContainerPortRange.MinPort > p.ContainerPortRange.MaxPort {
-			errs = append(errs, field.Invalid(field.NewPath("spec.ports.containerPortRange"), p.ContainerPortRange.MinPort,
+			errs = append(errs, field.Invalid(field.NewPath("spec.ports.containerPortRange"),
+				p.ContainerPortRange.MinPort,
 				"containerPortRange.minPort can not be larger than containerPortRange.minPort"))
 		}
 
 		if p.HostPortRange != nil && p.HostPortRange.MinPort > p.HostPortRange.MaxPort {
 			if p.ContainerPortRange != nil && p.ContainerPortRange.MinPort > p.ContainerPortRange.MaxPort {
-				errs = append(errs, field.Invalid(field.NewPath("spec.ports.hostPortRange"), p.ContainerPortRange.MinPort,
+				errs = append(errs, field.Invalid(field.NewPath("spec.ports.hostPortRange"),
+					p.ContainerPortRange.MinPort,
 					"hostPortRange.minPort can not be larger than hostPortRange.minPort"))
 			}
 		}
@@ -92,7 +98,8 @@ func validateSpec(gss *carrierv1alpha1.GameServerSpec) field.ErrorList {
 		}
 
 		if p.ContainerPort != nil && *p.ContainerPort <= 0 {
-			errs = append(errs, field.Invalid(field.NewPath("spec.ports.containerPort"), *p.ContainerPort,
+			errs = append(errs, field.Invalid(field.NewPath("spec.ports.containerPort"),
+				*p.ContainerPort,
 				"containerPort cannot <= 0"))
 		}
 
@@ -127,7 +134,8 @@ func validateName(c metav1.ObjectMeta) field.ErrorList {
 func validateLabelsAndAnnotations(objMeta *metav1.ObjectMeta) field.ErrorList {
 	var allErrs field.ErrorList
 	allErrs = append(allErrs, metav1validation.ValidateLabels(objMeta.Labels, field.NewPath("labels"))...)
-	allErrs = append(allErrs, apivalidation.ValidateAnnotations(objMeta.Annotations, field.NewPath("annotations"))...)
+	allErrs = append(allErrs, apivalidation.ValidateAnnotations(objMeta.Annotations,
+		field.NewPath("annotations"))...)
 	return allErrs
 }
 
@@ -143,7 +151,8 @@ func ValidateGameServerSetUpdate(oldGSS, newGSS *carrierv1alpha1.GameServerSet) 
 	newGSS.Spec.Replicas = oldGSS.Spec.Replicas
 	// allow update annotation and labels
 	if !apiequality.Semantic.DeepEqual(oldGSS.Spec.Template.Spec, newGSS.Spec.Template.Spec) {
-		errs = append(errs, field.Forbidden(field.NewPath("spec.template.spec"), "GameServer Spec are not allowed to changed, expect for image and resource"))
+		errs = append(errs, field.Forbidden(field.NewPath("spec.template.spec"),
+			"GameServer Spec are not allowed to changed, expect for image and resource"))
 	}
 
 	return errs
@@ -154,7 +163,8 @@ func ValidateGameServerSet(gsSet *carrierv1alpha1.GameServerSet) field.ErrorList
 	errs := validateName(gsSet.ObjectMeta)
 	errs = append(errs, validateSpec(&gsSet.Spec.Template.Spec)...)
 	errs = append(errs, validateLabelsAndAnnotations(&gsSet.Spec.Template.ObjectMeta)...)
-	return append(errs, validatePodTemplate(corev1.PodTemplate{ObjectMeta: gsSet.ObjectMeta, Template: gsSet.Spec.Template.Spec.Template})...)
+	return append(errs, validatePodTemplate(corev1.PodTemplate{ObjectMeta: gsSet.ObjectMeta,
+		Template: gsSet.Spec.Template.Spec.Template})...)
 }
 
 // ValidateSquad validates when Create occurs, check name, label, annotaions and podSpec
@@ -162,7 +172,8 @@ func ValidateSquad(squad *carrierv1alpha1.Squad) field.ErrorList {
 	errs := validateName(squad.ObjectMeta)
 	errs = append(errs, validateSpec(&squad.Spec.Template.Spec)...)
 	errs = append(errs, validateLabelsAndAnnotations(&squad.Spec.Template.ObjectMeta)...)
-	return append(errs, validatePodTemplate(corev1.PodTemplate{ObjectMeta: squad.ObjectMeta, Template: squad.Spec.Template.Spec.Template})...)
+	return append(errs, validatePodTemplate(corev1.PodTemplate{ObjectMeta: squad.ObjectMeta,
+		Template: squad.Spec.Template.Spec.Template})...)
 }
 
 // ValidateSquadUpdate validate the Squad update, only allow image, pullPolicy for pod spec.
@@ -175,7 +186,8 @@ func ValidateSquadUpdate(oldSquad, newSquad *carrierv1alpha1.Squad) field.ErrorL
 		newSquad.Spec.Template.Spec.Template.Spec.Containers[idx].ImagePullPolicy = c.ImagePullPolicy
 	}
 	if !apiequality.Semantic.DeepEqual(oldSquad.Spec.Template.Spec, oldSquad.Spec.Template.Spec) {
-		errs = append(errs, field.Forbidden(field.NewPath("spec.template.spec"), "GameServer Spec are not allowed to changed, expect for image and resource"))
+		errs = append(errs, field.Forbidden(field.NewPath("spec.template.spec"),
+			"GameServer Spec are not allowed to changed, expect for image and resource"))
 	}
 
 	return errs

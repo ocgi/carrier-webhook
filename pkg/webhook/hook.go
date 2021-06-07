@@ -66,11 +66,17 @@ const (
 	defaultRoleBingName       = "carrier-sdk"
 )
 
+// SideCarConfig describes the config of sidecar
 type SideCarConfig struct {
-	Image    string
-	CPU      resource.Quantity
-	Memory   resource.Quantity
+	// Image describes the image version
+	Image string
+	// CPU if cpu config of side car
+	CPU resource.Quantity
+	// Memory if memory config of side car
+	Memory resource.Quantity
+	// HttpPort is the port for http
 	HttpPort int
+	// GrpcPort is the port for grpc
 	GrpcPort int
 }
 
@@ -91,7 +97,9 @@ func init() {
 		&v1alpha1.GameServer{}, &v1alpha1.GameServerSet{}, &v1alpha1.Squad{})
 }
 
-func NewWebhookServer(config *SideCarConfig, kubeClient kubernetes.Interface, factory informers.SharedInformerFactory) *webhookServer {
+// NewWebhookServer creates a new server
+func NewWebhookServer(config *SideCarConfig, kubeClient kubernetes.Interface,
+	factory informers.SharedInformerFactory) *webhookServer {
 	saInformer := factory.Core().V1().ServiceAccounts()
 	roleBindingInformer := factory.Rbac().V1().RoleBindings()
 	return &webhookServer{
@@ -104,6 +112,7 @@ func NewWebhookServer(config *SideCarConfig, kubeClient kubernetes.Interface, fa
 	}
 }
 
+// WaitForCacheSynced wait the cache synced or die
 func (whsvr *webhookServer) WaitForCacheSynced(stop <-chan struct{}) {
 	klog.V(4).Info("Wait for cache sync")
 	if !cache.WaitForCacheSync(stop, whsvr.saSynced, whsvr.roleBindingSynced) {
@@ -171,7 +180,7 @@ func (whsvr *webhookServer) Serve(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// validate and mutate GameSerer, GameServerSet, Squad
+// mutate will validate and mutate GameSerer, GameServerSet, Squad
 func (whsvr *webhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
 
@@ -298,7 +307,8 @@ func (whsvr *webhookServer) forGameServerSet(req *v1beta1.AdmissionRequest) ([]b
 		klog.Errorf("Could not unmarshal raw object: %v", err)
 		return nil, nil, err
 	}
-	if err := whsvr.createSA(req.Namespace, gameServerSet.Spec.Template.Spec.Template.Spec.ServiceAccountName); err != nil {
+	if err := whsvr.createSA(req.Namespace,
+		gameServerSet.Spec.Template.Spec.Template.Spec.ServiceAccountName); err != nil {
 		klog.Errorf("Could create service account: %v", err)
 		return nil, nil, err
 	}
