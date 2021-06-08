@@ -312,8 +312,6 @@ github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN
 github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.7.0/go.mod h1:KAzv3t3aY1NaHWoQz1+4F1ccyAH66Jk7yos7ldAVICs=
 github.com/marten-seemann/qtls v0.2.3/go.mod h1:xzjG7avBwGGbdZ8dTGxlBnLArsVKLvwmjgmPuiQEcYk=
-github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24 h1:uYuGXJBAi1umT+ZS4oQJUgKtfXCAYTR+n9zw1ViT0vA=
-github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24/go.mod h1:M1qoD/MqPgTZIk0EWKB38wE28ACRfVcn+cU08jyArI0=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-isatty v0.0.3/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=
 github.com/mattn/go-isatty v0.0.4/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=
@@ -353,16 +351,8 @@ github.com/naoina/go-stringutil v0.1.0/go.mod h1:XJ2SJL9jCtBh+P9q5btrd/Ylo8XwT/h
 github.com/naoina/toml v0.1.1/go.mod h1:NBIhNtsFMo3G2szEBne+bO4gS192HuIYRqfvOWb4i1E=
 github.com/nbutton23/zxcvbn-go v0.0.0-20160627004424-a22cb81b2ecd/go.mod h1:o96djdrsSGy3AWPyBgZMAGfxZNfgntdJG+11KU4QvbU=
 github.com/nbutton23/zxcvbn-go v0.0.0-20171102151520-eafdab6b0663/go.mod h1:o96djdrsSGy3AWPyBgZMAGfxZNfgntdJG+11KU4QvbU=
-github.com/ocgi/carrier v0.0.0-20210526054920-6850497c100e h1:vipLYBauG6Qoxkr9mBpbzri9LkkpoUpYnm0Mu+slaaA=
-github.com/ocgi/carrier v0.0.0-20210526054920-6850497c100e/go.mod h1:A0KF7YslJmVt8vZMqlRHuTO7lmDzyuTYpSa1IBLsWvE=
-github.com/ocgi/carrier v0.0.0-20210602085333-6224206f4eae h1:V0aogIwFbwePhLUAN3+PVZU2itEuGcwl0TsmA+ty5FI=
-github.com/ocgi/carrier v0.0.0-20210602085333-6224206f4eae/go.mod h1:A0KF7YslJmVt8vZMqlRHuTO7lmDzyuTYpSa1IBLsWvE=
-github.com/ocgi/carrier v0.0.0-20210602115730-d7869d4d715c h1:bd+vT8jISdSpSXU2bOKJsydiv9qmJBG1RFBNZCRC7jE=
-github.com/ocgi/carrier v0.0.0-20210602115730-d7869d4d715c/go.mod h1:A0KF7YslJmVt8vZMqlRHuTO7lmDzyuTYpSa1IBLsWvE=
-github.com/ocgi/carrier v0.0.0-20210602121257-0dd5240f9b8f h1:lJIBpWCvmD851YKrMu+XnfBjleN9YqKlBL9/LU76yPs=
-github.com/ocgi/carrier v0.0.0-20210602121257-0dd5240f9b8f/go.mod h1:A0KF7YslJmVt8vZMqlRHuTO7lmDzyuTYpSa1IBLsWvE=
-github.com/ocgi/carrier v0.0.0-20210603094310-9db71b5035cc h1:xqJfH7/b6byLS9TvTGXDn07xgwLO/Dj1yL/U/wgzX68=
-github.com/ocgi/carrier v0.0.0-20210603094310-9db71b5035cc/go.mod h1:A0KF7YslJmVt8vZMqlRHuTO7lmDzyuTYpSa1IBLsWvE=
+github.com/ocgi/carrier v0.0.0-20210608083412-33df531feb28 h1:iYHPwqeQBh988poQXMxA3ifGtZ5HfSg/kxYhxviMo0I=
+github.com/ocgi/carrier v0.0.0-20210608083412-33df531feb28/go.mod h1:A0KF7YslJmVt8vZMqlRHuTO7lmDzyuTYpSa1IBLsWvE=
 github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=
 github.com/onsi/ginkgo v0.0.0-20170829012221-11459a886d9c/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=

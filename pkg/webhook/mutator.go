@@ -97,10 +97,6 @@ func EnsureDefaultForGameServer(gs *v1alpha1.GameServer) *v1alpha1.GameServer {
 	if gsCopy.Spec.Scheduling == "" {
 		gsCopy.Spec.Scheduling = v1alpha1.MostAllocated
 	}
-	if gsCopy.Status.State == "" {
-		gsCopy.Status.State = v1alpha1.GameServerUnknown
-
-	}
 	if gsCopy.Spec.Template.Spec.ServiceAccountName == "" {
 		gsCopy.Spec.Template.Spec.ServiceAccountName = defaultServiceAccountName
 	}
