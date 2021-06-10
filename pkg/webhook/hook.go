@@ -239,7 +239,7 @@ func (whsvr *webhookServer) createDefaultClusterRole() error {
 }
 
 func (whsvr *webhookServer) createSA(namespace string, saName string) error {
-	if saName != "" {
+	if saName != "" && saName != defaultServiceAccountName {
 		return nil
 	}
 	_, err := whsvr.saLister.ServiceAccounts(namespace).Get(defaultServiceAccountName)

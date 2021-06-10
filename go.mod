@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/mattbaird/jsonpatch v0.0.0
-	github.com/ocgi/carrier v0.0.0-20210608083412-33df531feb28
+	github.com/ocgi/carrier v0.0.0-20210610101158-4c98965a4ffe
 	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.17.5
 	k8s.io/apimachinery v0.17.5

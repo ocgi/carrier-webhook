@@ -109,6 +109,7 @@ func EnsureDefaultForGameServer(gs *v1alpha1.GameServer) *v1alpha1.GameServer {
 		}
 	}
 	gsCopy.Spec.ReadinessGates = append(gsCopy.Spec.ReadinessGates, LBReadyKey)
+	EnsureDefaultPortType(&gsCopy.Spec)
 	return gsCopy
 }
 
@@ -131,6 +132,7 @@ func EnsureDefaultsForGameServerSet(gsSet *v1alpha1.GameServerSet) *v1alpha1.Gam
 	if gsSetCopy.Spec.Template.Spec.Template.Spec.ServiceAccountName == "" {
 		gsSetCopy.Spec.Template.Spec.Template.Spec.ServiceAccountName = defaultServiceAccountName
 	}
+	EnsureDefaultPortType(&gsSetCopy.Spec.Template.Spec)
 	return gsSetCopy
 }
 
@@ -179,5 +181,15 @@ func EnsureDefaultsForSquad(squad *v1alpha1.Squad) *v1alpha1.Squad {
 	if squadCopy.Spec.Template.Spec.Template.Spec.ServiceAccountName == "" {
 		squadCopy.Spec.Template.Spec.Template.Spec.ServiceAccountName = defaultServiceAccountName
 	}
+	EnsureDefaultPortType(&squadCopy.Spec.Template.Spec)
 	return squadCopy
+}
+
+// EnsureDefaultPortType ensure default policyType of GameServer: LoaderBalancer
+func EnsureDefaultPortType(gsSpec *v1alpha1.GameServerSpec) {
+	for i, port := range gsSpec.Ports {
+		if len(port.PortPolicy) == 0 && port.HostPort == nil && port.HostPortRange == nil {
+			gsSpec.Ports[i].PortPolicy = v1alpha1.LoadBalancer
+		}
+	}
 }
