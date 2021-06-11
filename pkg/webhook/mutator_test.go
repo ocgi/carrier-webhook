@@ -151,9 +151,22 @@ func healthOption() *k8testing.PodWrapper {
 }
 
 func defaultSquad() *carrierv1alpha1.Squad {
+	var port int32 = 1000
 	return &carrierv1alpha1.Squad{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
+		},
+		Spec: carrierv1alpha1.SquadSpec{
+			Template: carrierv1alpha1.GameServerTemplateSpec{
+				Spec: carrierv1alpha1.GameServerSpec{
+					Ports: []carrierv1alpha1.GameServerPort{
+						{
+							Name:          "test",
+							ContainerPort: &port,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -161,6 +174,7 @@ func defaultSquad() *carrierv1alpha1.Squad {
 func filledSquad() *carrierv1alpha1.Squad {
 	ratio := intstr.FromString("25%")
 	var his int32 = 10
+	var port int32 = 1000
 	return &carrierv1alpha1.Squad{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
@@ -176,6 +190,13 @@ func filledSquad() *carrierv1alpha1.Squad {
 			Scheduling: carrierv1alpha1.MostAllocated,
 			Template: carrierv1alpha1.GameServerTemplateSpec{
 				Spec: carrierv1alpha1.GameServerSpec{
+					Ports: []carrierv1alpha1.GameServerPort{
+						{
+							Name:          "test",
+							ContainerPort: &port,
+							PortPolicy:    carrierv1alpha1.LoadBalancer,
+						},
+					},
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
 							ServiceAccountName: defaultServiceAccountName,
