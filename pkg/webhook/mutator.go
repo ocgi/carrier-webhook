@@ -218,3 +218,13 @@ func ensureDefaultRevisionHistoryLimit(squadSpec *v1alpha1.SquadSpec) {
 	}
 	*squadSpec.RevisionHistoryLimit = 10
 }
+
+// CopyDefaultsForSquad copy some default fields of Squad
+func CopyDefaultsForSquad(oldSquad, newSquad *v1alpha1.Squad) *v1alpha1.Squad {
+	squadCopy := newSquad.DeepCopy()
+	if squadCopy.Spec.Template.Spec.Template.Spec.ServiceAccountName == "" {
+		squadCopy.Spec.Template.Spec.Template.Spec.ServiceAccountName = oldSquad.Spec.Template.Spec.Template.Spec.ServiceAccountName
+	}
+	ensureDefaultPortType(&squadCopy.Spec.Template.Spec)
+	return squadCopy
+}
