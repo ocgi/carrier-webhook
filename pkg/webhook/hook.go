@@ -297,6 +297,9 @@ func (whsvr *webhookServer) forSquad(req *v1beta1.AdmissionRequest) ([]byte, fie
 		if len(errs) != 0 {
 			return nil, errs, errs.ToAggregate()
 		}
+		newSquad := CopyDefaultsForSquad(&oldSquad, &squad)
+		patch, err := util.CreateJsonPatch(squad, newSquad)
+		return patch, nil, err
 	}
 	return nil, nil, nil
 }
