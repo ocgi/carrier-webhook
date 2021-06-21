@@ -181,11 +181,11 @@ func ValidateSquad(squad *carrierv1alpha1.Squad) field.ErrorList {
 func ValidateSquadUpdate(oldSquad, newSquad *carrierv1alpha1.Squad) field.ErrorList {
 	errs := validateName(newSquad.ObjectMeta)
 	// to support in-place update, allow image update
-	for idx, c := range oldSquad.Spec.Template.Spec.Template.Spec.Containers {
-		newSquad.Spec.Template.Spec.Template.Spec.Containers[idx].Image = c.Image
-		newSquad.Spec.Template.Spec.Template.Spec.Containers[idx].ImagePullPolicy = c.ImagePullPolicy
+	for idx, c := range newSquad.Spec.Template.Spec.Template.Spec.Containers {
+		oldSquad.Spec.Template.Spec.Template.Spec.Containers[idx].Image = c.Image
+		oldSquad.Spec.Template.Spec.Template.Spec.Containers[idx].ImagePullPolicy = c.ImagePullPolicy
 	}
-	if !apiequality.Semantic.DeepEqual(oldSquad.Spec.Template.Spec, oldSquad.Spec.Template.Spec) {
+	if !apiequality.Semantic.DeepEqual(oldSquad.Spec.Template.Spec, newSquad.Spec.Template.Spec) {
 		errs = append(errs, field.Forbidden(field.NewPath("spec.template.spec"),
 			"GameServer Spec are not allowed to changed, expect for image and resource"))
 	}

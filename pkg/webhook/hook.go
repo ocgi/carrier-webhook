@@ -292,12 +292,12 @@ func (whsvr *webhookServer) forSquad(req *v1beta1.AdmissionRequest) ([]byte, fie
 			klog.Errorf("Could not unmarshal raw object: %v", err)
 			return nil, nil, err
 		}
+		newSquad := CopyDefaultsForSquad(&oldSquad, &squad)
 		// validate
-		errs := ValidateSquadUpdate(&oldSquad, &squad)
+		errs := ValidateSquadUpdate(&oldSquad, newSquad)
 		if len(errs) != 0 {
 			return nil, errs, errs.ToAggregate()
 		}
-		newSquad := CopyDefaultsForSquad(&oldSquad, &squad)
 		patch, err := util.CreateJsonPatch(squad, newSquad)
 		return patch, nil, err
 	}
