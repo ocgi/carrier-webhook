@@ -43,6 +43,46 @@ func EnsurePod(pod *corev1.Pod, f func(*corev1.Pod), opts ...option) *corev1.Pod
 	return podCopy
 }
 
+// EnsureDefaultForGameServer ensure some default fields of GameServer
+func EnsureDefaultForGameServer(gs *v1alpha1.GameServer) *v1alpha1.GameServer {
+	gsCopy := gs.DeepCopy()
+	ensureLBReadinessGates(gsCopy)
+	ensureDefaultSchedulingPolicy(&gsCopy.Spec.Scheduling)
+	ensureDefaultServiceAccount(&gsCopy.Spec)
+	ensureDefaultPortType(&gsCopy.Spec)
+	return gsCopy
+}
+
+// EnsureDefaultsForGameServerSet ensure some default fields of GameServerSet
+func EnsureDefaultsForGameServerSet(gsSet *v1alpha1.GameServerSet) *v1alpha1.GameServerSet {
+	gsSetCopy := gsSet.DeepCopy()
+	ensureDefaultTemplateLabel(&gsSetCopy.Spec.Template, carrierutil.GameServerSetLabelKey, gsSetCopy.Name)
+	if gsSetCopy.Spec.Selector == nil {
+		gsSetCopy.Spec.Selector = &metav1.LabelSelector{}
+	}
+	ensureDefaultSelector(gsSetCopy.Spec.Selector, carrierutil.GameServerSetLabelKey, gsSetCopy.Name)
+	ensureDefaultSchedulingPolicy(&gsSetCopy.Spec.Scheduling)
+	ensureDefaultServiceAccount(&gsSetCopy.Spec.Template.Spec)
+	ensureDefaultPortType(&gsSetCopy.Spec.Template.Spec)
+	return gsSetCopy
+}
+
+// EnsureDefaultsForSquad ensure some default fields of Squad
+func EnsureDefaultsForSquad(squad *v1alpha1.Squad) *v1alpha1.Squad {
+	squadCopy := squad.DeepCopy()
+	ensureDefaultRevisionHistoryLimit(&squadCopy.Spec)
+	ensureDefaultStrategy(&squadCopy.Spec.Strategy)
+	ensureDefaultTemplateLabel(&squadCopy.Spec.Template, carrierutil.SquadNameLabelKey, squadCopy.Name)
+	if squadCopy.Spec.Selector == nil {
+		squadCopy.Spec.Selector = &metav1.LabelSelector{}
+	}
+	ensureDefaultSelector(squadCopy.Spec.Selector, carrierutil.SquadNameLabelKey, squadCopy.Name)
+	ensureDefaultSchedulingPolicy(&squadCopy.Spec.Scheduling)
+	ensureDefaultServiceAccount(&squadCopy.Spec.Template.Spec)
+	ensureDefaultPortType(&squadCopy.Spec.Template.Spec)
+	return squadCopy
+}
+
 // sideCarExist checks if side car already exist
 func sideCarExist(pod *corev1.Pod) bool {
 	for _, container := range pod.Spec.Containers {
@@ -91,71 +131,65 @@ func buildSideCarVolumeMount(pod *corev1.Pod) []corev1.VolumeMount {
 	}
 }
 
-// EnsureDefaultForGameServer ensure some default fields of GameServer
-func EnsureDefaultForGameServer(gs *v1alpha1.GameServer) *v1alpha1.GameServer {
-	gsCopy := gs.DeepCopy()
-	if gsCopy.Spec.Scheduling == "" {
-		gsCopy.Spec.Scheduling = v1alpha1.MostAllocated
+// ensureLBReadinessGates LB readinessGates if using LB
+func ensureLBReadinessGates(gs *v1alpha1.GameServer) {
+	if len(gs.Annotations) == 0 {
+		return
 	}
-	if gsCopy.Spec.Template.Spec.ServiceAccountName == "" {
-		gsCopy.Spec.Template.Spec.ServiceAccountName = defaultServiceAccountName
+	if len(gs.Annotations[ExternalNetworkKey]) == 0 {
+		return
 	}
-	if len(gsCopy.Annotations[ExternalNetworkKey]) == 0 {
-		return gsCopy
-	}
-	for _, state := range gsCopy.Spec.ReadinessGates {
+	for _, state := range gs.Spec.ReadinessGates {
 		if state == LBReadyKey {
-			return gsCopy
+			return
 		}
 	}
-	gsCopy.Spec.ReadinessGates = append(gsCopy.Spec.ReadinessGates, LBReadyKey)
-	EnsureDefaultPortType(&gsCopy.Spec)
-	return gsCopy
+	gs.Spec.ReadinessGates = append(gs.Spec.ReadinessGates, LBReadyKey)
 }
 
-// EnsureDefaultsForGameServerSet ensure some default fields of GameServerSet
-func EnsureDefaultsForGameServerSet(gsSet *v1alpha1.GameServerSet) *v1alpha1.GameServerSet {
-	gsSetCopy := gsSet.DeepCopy()
-	// setting selector
-	if gsSetCopy.Spec.Selector == nil {
-		gsSetCopy.Spec.Selector = &metav1.LabelSelector{}
-	}
-	if gsSetCopy.Spec.Selector.MatchLabels == nil {
-		gsSetCopy.Spec.Selector.MatchLabels = map[string]string{
-			carrierutil.GameServerSetLabelKey: gsSetCopy.Name,
+// ensureDefaultPortType ensure default policyType of GameServer: LoaderBalancer
+func ensureDefaultPortType(gsSpec *v1alpha1.GameServerSpec) {
+	for i, port := range gsSpec.Ports {
+		if len(port.PortPolicy) == 0 && port.HostPort == nil && port.HostPortRange == nil {
+			gsSpec.Ports[i].PortPolicy = v1alpha1.LoadBalancer
 		}
 	}
+}
+
+// ensureDefaultServiceAccount ensure default serviceAccount name
+func ensureDefaultServiceAccount(gsSpec *v1alpha1.GameServerSpec) {
+	if gsSpec.Template.Spec.ServiceAccountName == "" {
+		gsSpec.Template.Spec.ServiceAccountName = defaultServiceAccountName
+	}
+}
+
+// ensureDefaultServiceAccount ensure default scheduling strategy
+func ensureDefaultSchedulingPolicy(strategy *v1alpha1.SchedulingStrategy) {
 	// setting scheduling strategy
-	if gsSetCopy.Spec.Scheduling == "" {
-		gsSetCopy.Spec.Scheduling = v1alpha1.MostAllocated
+	if *strategy == "" {
+		*strategy = v1alpha1.MostAllocated
 	}
-	if gsSetCopy.Spec.Template.Spec.Template.Spec.ServiceAccountName == "" {
-		gsSetCopy.Spec.Template.Spec.Template.Spec.ServiceAccountName = defaultServiceAccountName
-	}
-	EnsureDefaultPortType(&gsSetCopy.Spec.Template.Spec)
-	return gsSetCopy
 }
 
-// EnsureDefaultsForSquad ensure some default fields of Squad
-func EnsureDefaultsForSquad(squad *v1alpha1.Squad) *v1alpha1.Squad {
-	squadCopy := squad.DeepCopy()
-	// setting revision history limit
-	if squadCopy.Spec.RevisionHistoryLimit == nil {
-		squadCopy.Spec.RevisionHistoryLimit = new(int32)
-		*squadCopy.Spec.RevisionHistoryLimit = 10
-	}
+// ensureDefaultSelector ensure default label selector
+func ensureDefaultSelector(selector *metav1.LabelSelector, kind, name string) {
 	// setting selector
-	if squadCopy.Spec.Selector == nil {
-		squadCopy.Spec.Selector = &metav1.LabelSelector{}
-	}
-	if squadCopy.Spec.Selector.MatchLabels == nil {
-		squadCopy.Spec.Selector.MatchLabels = map[string]string{
-			carrierutil.SquadNameLabelKey: squadCopy.Name,
+	if selector.MatchLabels == nil {
+		selector.MatchLabels = map[string]string{
+			kind: name,
 		}
 	}
-	// setting update strategy
-	strategy := &squadCopy.Spec.Strategy
-	// Set default v1alpha1.RollingUpdateSquadStrategyType as RollingUpdate.
+}
+
+// ensureDefaultTemplateLabel ensure default label
+func ensureDefaultTemplateLabel(gameServerTemplate *v1alpha1.GameServerTemplateSpec, kind, name string) {
+	if len(gameServerTemplate.Labels) == 0 {
+		gameServerTemplate.Labels = map[string]string{kind: name}
+	}
+}
+
+// ensureDefaultStrategy ensure default update policy.
+func ensureDefaultStrategy(strategy *v1alpha1.SquadStrategy) {
 	if strategy.Type == "" {
 		strategy.Type = v1alpha1.RollingUpdateSquadStrategyType
 	}
@@ -175,21 +209,12 @@ func EnsureDefaultsForSquad(squad *v1alpha1.Squad) *v1alpha1.Squad {
 			strategy.RollingUpdate.MaxSurge = &maxSurge
 		}
 	}
-	if squadCopy.Spec.Scheduling == "" {
-		squadCopy.Spec.Scheduling = v1alpha1.MostAllocated
-	}
-	if squadCopy.Spec.Template.Spec.Template.Spec.ServiceAccountName == "" {
-		squadCopy.Spec.Template.Spec.Template.Spec.ServiceAccountName = defaultServiceAccountName
-	}
-	EnsureDefaultPortType(&squadCopy.Spec.Template.Spec)
-	return squadCopy
 }
 
-// EnsureDefaultPortType ensure default policyType of GameServer: LoaderBalancer
-func EnsureDefaultPortType(gsSpec *v1alpha1.GameServerSpec) {
-	for i, port := range gsSpec.Ports {
-		if len(port.PortPolicy) == 0 && port.HostPort == nil && port.HostPortRange == nil {
-			gsSpec.Ports[i].PortPolicy = v1alpha1.LoadBalancer
-		}
+// ensureDefaultRevisionHistoryLimit revisionHistoryLimit to 10.
+func ensureDefaultRevisionHistoryLimit(squadSpec *v1alpha1.SquadSpec) {
+	if squadSpec.RevisionHistoryLimit == nil {
+		squadSpec.RevisionHistoryLimit = new(int32)
 	}
+	*squadSpec.RevisionHistoryLimit = 10
 }

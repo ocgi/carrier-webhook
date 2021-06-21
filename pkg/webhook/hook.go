@@ -276,13 +276,13 @@ func (whsvr *webhookServer) forSquad(req *v1beta1.AdmissionRequest) ([]byte, fie
 		return nil, nil, err
 	}
 	if req.Operation == v1beta1.Create {
+		newSquad := EnsureDefaultsForSquad(&squad)
 		// validate
-		errs := ValidateSquad(&squad)
+		errs := ValidateSquad(newSquad)
 		if len(errs) != 0 {
 			return nil, errs, errs.ToAggregate()
 		}
 		// mutate
-		newSquad := EnsureDefaultsForSquad(&squad)
 		patch, err := util.CreateJsonPatch(squad, newSquad)
 		return patch, nil, err
 	}
@@ -313,12 +313,12 @@ func (whsvr *webhookServer) forGameServerSet(req *v1beta1.AdmissionRequest) ([]b
 		return nil, nil, err
 	}
 	if req.Operation == v1beta1.Create {
+		newGameServerSet := EnsureDefaultsForGameServerSet(&gameServerSet)
 		// validate
-		errs := ValidateGameServerSet(&gameServerSet)
+		errs := ValidateGameServerSet(newGameServerSet)
 		if len(errs) != 0 {
 			return nil, errs, errs.ToAggregate()
 		}
-		newGameServerSet := EnsureDefaultsForGameServerSet(&gameServerSet)
 		patch, err := util.CreateJsonPatch(gameServerSet, newGameServerSet)
 		return patch, nil, err
 	}
@@ -347,12 +347,12 @@ func (whsvr *webhookServer) forGameServer(req *v1beta1.AdmissionRequest) ([]byte
 		return nil, nil, err
 	}
 	if req.Operation == v1beta1.Create {
+		newGameServer := EnsureDefaultForGameServer(&gameSvr)
 		// validate
-		errs := ValidateGameServer(&gameSvr)
+		errs := ValidateGameServer(newGameServer)
 		if len(errs) != 0 {
 			return nil, errs, errs.ToAggregate()
 		}
-		newGameServer := EnsureDefaultForGameServer(&gameSvr)
 		patch, err := util.CreateJsonPatch(gameSvr, newGameServer)
 		return patch, nil, err
 	}
