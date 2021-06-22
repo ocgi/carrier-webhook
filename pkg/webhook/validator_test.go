@@ -17,9 +17,84 @@ package webhook
 import (
 	"testing"
 
-	carrierv1alpha1 "github.com/ocgi/carrier/pkg/apis/carrier/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+
+	carrierv1alpha1 "github.com/ocgi/carrier/pkg/apis/carrier/v1alpha1"
 )
+
+func Test_ValidateGameServer(t *testing.T) {
+	var tcpport int32 = 10000
+	for _, c := range []struct {
+		name  string
+		newGS *carrierv1alpha1.GameServer
+		ok    bool
+	}{
+		{
+			name: "with containerPort, success",
+			newGS: defaultGS().SetPorts([]carrierv1alpha1.GameServerPort{
+				{
+					Name:          "dsport-tcp",
+					ContainerPort: &tcpport,
+					Protocol:      corev1.ProtocolTCP,
+				},
+			}).Obj(),
+			ok: true,
+		},
+		{
+			name: "with containerPortRange, success",
+			newGS: defaultGS().SetPorts([]carrierv1alpha1.GameServerPort{
+				{
+					Name: "dsport-udp",
+					ContainerPortRange: &carrierv1alpha1.PortRange{
+						MinPort: 10000,
+						MaxPort: 10099,
+					},
+					Protocol: corev1.ProtocolUDP,
+				},
+			}).Obj(),
+			ok: true,
+		},
+		{
+			name: "with both containerPortRange and containerPort, fail",
+			newGS: defaultGS().SetPorts([]carrierv1alpha1.GameServerPort{
+				{
+					Name: "dsport-udp",
+					ContainerPortRange: &carrierv1alpha1.PortRange{
+						MinPort: 10000,
+						MaxPort: 10099,
+					},
+					ContainerPort: &tcpport,
+					Protocol:      corev1.ProtocolUDP,
+				},
+			}).Obj(),
+			ok: false,
+		},
+		{
+			name:  "without ports length 0, success",
+			newGS: defaultGS().SetPorts([]carrierv1alpha1.GameServerPort{}).Obj(),
+			ok:    true,
+		},
+		{
+			name:  "with ports nil, success",
+			newGS: defaultGS().SetPorts(nil).Obj(),
+			ok:    true,
+		},
+		{
+			name:  "container named server not exist",
+			newGS: defaultGSWithoutContainerName().SetPorts(nil).Obj(),
+			ok:    false,
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			errs := ValidateGameServer(c.newGS)
+			if errs.ToAggregate() == nil != c.ok {
+				t.Errorf("desired %v, get %v, ca", c.ok, errs.ToAggregate())
+				return
+			}
+			t.Log(errs.ToAggregate())
+		})
+	}
+}
 
 func Test_ValidateGameServerUpdate(t *testing.T) {
 	old := defaultGS()
@@ -234,6 +309,12 @@ func defaultGS() *GameServerWrapper {
 	return &GameServerWrapper{gs}
 }
 
+func defaultGSWithoutContainerName() *GameServerWrapper {
+	gs := defaultGS().DeepCopy()
+	gs.Spec.Template.Spec.Containers[0].Name = "test"
+	return &GameServerWrapper{gs}
+}
+
 func defaultGSS() *GameServerSetWrapper {
 	gss := &carrierv1alpha1.GameServerSet{
 		Spec: carrierv1alpha1.GameServerSetSpec{
@@ -254,73 +335,4 @@ func defaultGSS() *GameServerSetWrapper {
 		},
 	}
 	return &GameServerSetWrapper{gss}
-}
-
-func Test_ValidateGameServer(t *testing.T) {
-	var tcpport int32 = 10000
-	for _, c := range []struct {
-		name  string
-		newGS *carrierv1alpha1.GameServer
-		ok    bool
-	}{
-		{
-			name: "with containerPort, success",
-			newGS: defaultGS().SetPorts([]carrierv1alpha1.GameServerPort{
-				{
-					Name:          "dsport-tcp",
-					ContainerPort: &tcpport,
-					Protocol:      corev1.ProtocolTCP,
-				},
-			}).Obj(),
-			ok: true,
-		},
-		{
-			name: "with containerPortRange, success",
-			newGS: defaultGS().SetPorts([]carrierv1alpha1.GameServerPort{
-				{
-					Name: "dsport-udp",
-					ContainerPortRange: &carrierv1alpha1.PortRange{
-						MinPort: 10000,
-						MaxPort: 10099,
-					},
-					Protocol: corev1.ProtocolUDP,
-				},
-			}).Obj(),
-			ok: true,
-		},
-		{
-			name: "with both containerPortRange and containerPort, fail",
-			newGS: defaultGS().SetPorts([]carrierv1alpha1.GameServerPort{
-				{
-					Name: "dsport-udp",
-					ContainerPortRange: &carrierv1alpha1.PortRange{
-						MinPort: 10000,
-						MaxPort: 10099,
-					},
-					ContainerPort: &tcpport,
-					Protocol:      corev1.ProtocolUDP,
-				},
-			}).Obj(),
-			ok: false,
-		},
-		{
-			name:  "without ports length 0, success",
-			newGS: defaultGS().SetPorts([]carrierv1alpha1.GameServerPort{}).Obj(),
-			ok:    true,
-		},
-		{
-			name:  "with ports nil, success",
-			newGS: defaultGS().SetPorts(nil).Obj(),
-			ok:    true,
-		},
-	} {
-		t.Run(c.name, func(t *testing.T) {
-			errs := ValidateGameServer(c.newGS)
-			if errs.ToAggregate() == nil != c.ok {
-				t.Errorf("desired %v, get %v, ca", c.ok, errs.ToAggregate())
-				return
-			}
-			t.Log(errs.ToAggregate())
-		})
-	}
 }
