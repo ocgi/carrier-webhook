@@ -15,6 +15,9 @@
 package webhook
 
 import (
+	"fmt"
+
+	"github.com/ocgi/carrier/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
@@ -36,7 +39,8 @@ import (
 func ValidateGameServer(gs *carrierv1alpha1.GameServer) field.ErrorList {
 	errs := validateName(gs.ObjectMeta)
 	errs = append(errs, validateSpec(&gs.Spec)...)
-	return append(errs, validatePodTemplate(corev1.PodTemplate{Template: gs.Spec.Template})...)
+	errs = append(errs, validateContainerName(&gs.Spec.Template)...)
+	return append(errs, validatePodTemplate(&corev1.PodTemplate{Template: gs.Spec.Template})...)
 }
 
 // ValidateGameServerUpdate validate the GameServer update, only allow image now.
@@ -163,7 +167,8 @@ func ValidateGameServerSet(gsSet *carrierv1alpha1.GameServerSet) field.ErrorList
 	errs := validateName(gsSet.ObjectMeta)
 	errs = append(errs, validateSpec(&gsSet.Spec.Template.Spec)...)
 	errs = append(errs, validateLabelsAndAnnotations(&gsSet.Spec.Template.ObjectMeta)...)
-	return append(errs, validatePodTemplate(corev1.PodTemplate{ObjectMeta: gsSet.ObjectMeta,
+	errs = append(errs, validateContainerName(&gsSet.Spec.Template.Spec.Template)...)
+	return append(errs, validatePodTemplate(&corev1.PodTemplate{ObjectMeta: gsSet.ObjectMeta,
 		Template: gsSet.Spec.Template.Spec.Template})...)
 }
 
@@ -172,7 +177,8 @@ func ValidateSquad(squad *carrierv1alpha1.Squad) field.ErrorList {
 	errs := validateName(squad.ObjectMeta)
 	errs = append(errs, validateSpec(&squad.Spec.Template.Spec)...)
 	errs = append(errs, validateLabelsAndAnnotations(&squad.Spec.Template.ObjectMeta)...)
-	return append(errs, validatePodTemplate(corev1.PodTemplate{ObjectMeta: squad.ObjectMeta,
+	errs = append(errs, validateContainerName(&squad.Spec.Template.Spec.Template)...)
+	return append(errs, validatePodTemplate(&corev1.PodTemplate{ObjectMeta: squad.ObjectMeta,
 		Template: squad.Spec.Template.Spec.Template})...)
 }
 
@@ -193,7 +199,7 @@ func ValidateSquadUpdate(oldSquad, newSquad *carrierv1alpha1.Squad) field.ErrorL
 	return errs
 }
 
-func validatePodTemplate(specTemplate corev1.PodTemplate) field.ErrorList {
+func validatePodTemplate(specTemplate *corev1.PodTemplate) field.ErrorList {
 	copy := specTemplate.DeepCopy()
 	coreTemp := &k8sapi.PodTemplate{}
 	copy.Namespace = "fake"
@@ -206,4 +212,17 @@ func validatePodTemplate(specTemplate corev1.PodTemplate) field.ErrorList {
 	}
 
 	return apicorevalidation.ValidatePodTemplate(coreTemp)
+}
+
+func validateContainerName(podTemplateSpec *corev1.PodTemplateSpec) field.ErrorList {
+	var containerNames []string
+	for _, container := range podTemplateSpec.Spec.Containers {
+		containerNames = append(containerNames, container.Name)
+		if container.Name == util.GameServerContainerName {
+			return nil
+		}
+	}
+	return []*field.Error{field.Invalid(field.NewPath("spec.template.spec.containers"),
+		containerNames,
+		fmt.Sprintf("container named %v must exist", util.GameServerContainerName))}
 }
