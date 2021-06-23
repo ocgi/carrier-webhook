@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: carrier-webhook
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: carrier-webhook
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts
+      - events
+    verbs:
+      - list
+      - watch
+      - get
+      - create
+      - patch
+  - apiGroups:
+      - "rbac.authorization.k8s.io"
+    resources:
+      - clusterroles
+      - rolebindings
+    verbs:
+      - list
+      - watch
+      - get
+      - create
+  - apiGroups:
+      - "carrier.ocgi.dev"
+    resources:
+      - "*"
+    verbs:
+      - "*"
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: carrier-webhook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: carrier-webhook
+subjects:
+  - kind: ServiceAccount
+    name: carrier-webhook
+    namespace: kube-system
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: carrier-webhook-service
+  namespace: kube-system
+  labels:
+    app: carrier-webhook
+spec:
+  selector:
+    app: carrier-webhook
+  type: ClusterIP
+  ports:
+    - port: 443
+      targetPort: 443
+      protocol: TCP
+---
+apiVersion: v1
+data:
+  cert.pem: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURiekNDQWxlZ0F3SUJBZ0lKQU9HTmdhemNxZitBTUEwR0NTcUdTSWIzRFFFQkN3VUFNQlV4RXpBUkJnTlYKQkFNTUNuZGxZbWh2YjJ0ZlkyRXdJQmNOTWpFd01qSTJNRFkwTWpRMVdoZ1BNakk1TkRFeU1USXdOalF5TkRWYQpNREl4TURBdUJnTlZCQU1NSjJOaGNuSnBaWEl0ZDJWaWFHOXZheTF6WlhKMmFXTmxMbXQxWW1VdGMzbHpkR1Z0CkxuTjJZekNDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFEZ2dFUEFEQ0NBUW9DZ2dFQkFOY09lN2M0MCtDTTlTMFkKYlV4T3dIWDMyZmxHVU51WUhIRnRld2pyTUsrQUtPL21ibjNQNGJ4dGVQSVMwS0cva21FY0w0RGFXVFJkN0dITwpHS1BXbisrQW5uOGRCZFpubmo2NmIvdGFOZnNsc1JBVUo0WHFRNnA2S0JDK3FReTNiSTY0bTBrdzI2MUdHbk9XCnZyMGhyZWVmNjU4UmhyMnZHdGNmK0VsNEVFTEFhY0lpZFZLaERteEFwZGo4VlFjQlA1OFZzSW5FTzJSTGtPdkkKcG8ybWxGU3NyMlZMTEp2K0p3RzlvNk5QbVZQRmRMU2NNUWl4VXI2M3R2RFNuQmpaZnhnWU1XMUVqY0s4R2t1ZApXL3FFRFhVZFdOL3NaZ3NPZ1VxUitjWHpIbWtsU3NxNmF1amROdjE2VURsK2pTQkJETENoSWhGN3ljRC93dU1YCnQwVWQ0Tk1DQXdFQUFhT0JvakNCbnpBSkJnTlZIUk1FQWpBQU1Bc0dBMVVkRHdRRUF3SUY0REFUQmdOVkhTVUUKRERBS0JnZ3JCZ0VGQlFjREFUQndCZ05WSFJFRWFUQm5naGRqWVhKeWFXVnlMWGRsWW1odmIyc3RjMlZ5ZG1sagpaWUlqWTJGeWNtbGxjaTEzWldKb2IyOXJMWE5sY25acFkyVXVhM1ZpWlMxemVYTjBaVzJDSjJOaGNuSnBaWEl0CmQyVmlhRzl2YXkxelpYSjJhV05sTG10MVltVXRjM2x6ZEdWdExuTjJZekFOQmdrcWhraUc5dzBCQVFzRkFBT0MKQVFFQU53WG5IQzlMdnhNMXZlRUl0SDVhSUxxd0gxamdWdnZuL25zSjVpNzZDdDFRVW9yZ2h3V2xJY2tWeWw0bApSTkoyN2FhSzExMDdKUUU4Q25pc0hlVzMyV3oyM2VpQTBHS1J5SEsvWjhuSzQvMURiRFNOcGZKdHlCK0NEaVBaCmJyb3dyblNSZHhXcHhwTE9vR05BRmkwQ0s1dHRwSml5NEFabXR4VnhROENQQkhuUFlKdENhYit2WEhzUkJualMKVi83ekQwaCtLVFVUZHBiazc1V1NwdnVkTjdHdFFhVmk2TkEvZHU1eHRYNC9Ka0tzUWM5bjhMTGk0ekdDWjM3RAo2dFZMQ2laeFpZWldUVkdibkZhSnpiRnJsRXdaYUtjWHBEV09HQ1JSVjNLMjF1L3UvejlSS09PV3NqdFYyS3YzCjRZd3l3ZEphSGhoRVlaaWhyWkZGYnVPSXpRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+  key.pem: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBMXc1N3R6alQ0SXoxTFJodFRFN0FkZmZaK1VaUTI1Z2NjVzE3Q09zd3I0QW83K1p1CmZjL2h2RzE0OGhMUW9iK1NZUnd2Z05wWk5GM3NZYzRZbzlhZjc0Q2VmeDBGMW1lZVBycHYrMW8xK3lXeEVCUW4KaGVwRHFub29FTDZwRExkc2pyaWJTVERiclVZYWM1YSt2U0d0NTUvcm54R0d2YThhMXgvNFNYZ1FRc0Jwd2lKMQpVcUVPYkVDbDJQeFZCd0UvbnhXd2ljUTdaRXVRNjhpbWphYVVWS3l2WlVzc20vNG5BYjJqbzArWlU4VjB0Snd4CkNMRlN2cmUyOE5LY0dObC9HQmd4YlVTTndyd2FTNTFiK29RTmRSMVkzK3htQ3c2QlNwSDV4Zk1lYVNWS3lycHEKNk4wMi9YcFFPWDZOSUVFTXNLRWlFWHZKd1AvQzR4ZTNSUjNnMHdJREFRQUJBb0lCQUh3ZnplUW9scEhxaWJBbgpneDRoN2crb3FGU3A4dzFydEM3N282RzRMWGQrSHlLbisybitUQ24zZlhFcXp1UXNzQTRBdUtKRVpHeEhNYUlaCjFEcnNLNCtPeXV4UEVnbDM4T3YvcTVhRnNOWnVJTTVJODY3bFVYeloyTG9oY1d6M2lWNnV5bUhxSTBEVlQzc2IKcktkNUF1akhjclZ5NWpRaEZ2ckhad1R3bVdJTW9aYmVqalc5V3JKRlB4WjlLQ29QdXdYZTZ0Zk5yUm5LdFFRVgpjTmlXTFVBMUIvTEcyTVFKa2RxTGZ2MDhqc3lmYUtUY2lNSG9zK1hFWkhiRWIzdzNid2wxYVpVMEZMU0RKOFl1CkRRVVV0VHdDZUowTXQ1Mjd1K2NIZHlvRHgxeE01VkRFdnV1SmtoT1BBYWlEdWpnenFmcHBGaXh2UDFMTUJicDMKckFheU01RUNnWUVBN3hhUFgveUovT1JheFhnTmMreTlKVHFGb3RudmF5dmJDVjBiMWZvZ3NBQmM3V0xEUC8xQwo1UXg3UFM2SHd5UmxKMG5ITFZIeFQ1VjBvc1ZQSlpVeVhDREJobUQzb05jNDNHbC81cnJkd2hySzhjYzdGNDltClJ2SWYwSTlwR1o2VnR5QUlvUksvUzNwQnZHMnplKzFGTjI5Ym1zQ3lHdE1tbk9OUkdRbjBuSThDZ1lFQTVrVEIKdE5hckYyOVlPdWd1Q0VROXB4eStMWnpTM3lQdk1OZXU3djJmUmJxNGNRM3NMNkVPcmIzanJrajBoL3RHcUVSUQpyY3pOcE9IUm53MHplcC9zTTFvUWk5OEtIVEthV0YwUGlRUStUNjNyamZYcEZTRWZHYjhYVmR0d0Q4RXR6RHdOCnRoS0phTWNLZDNTa0tTVHJ3OVdGUUNKLzhWSTdyenZnMVZVUklYMENnWUI3WFpDdFhvbDB5LzlxVlAvY0NST3YKMmZxS2hSbGNtMHh5RUhFRWdBUE56T0ltT3dlMFJPSDNmZkU1S0lFMDE5cTU0dis3Q3NVUTQzVkRaN3ZuRUl6agpyS011eTJuNnZCTEM2RXp1cVEwejBzOVU0aEJEbitLT1NQRFJsSzRPWWgydVdBRWIyNmlKTVpRcHZoRVdxTjlHCk0xZDVDbVRjSW9lUi9Ga2tLbGJsVVFLQmdRQ1NLdmtQRXVsZUllYk8xYzFLb0E3R3dwOFNFeWRrVDhvb3BmQzgKY2pBbE1pYWNWU3NrL01aMWtVRXl3OHE5ZXNyYVN5c3ZkLzdkK0I1NUtRY1JndXlMbUZOQ2hsMUVOWGYyT1hTQQpGRHA5bDdnYjBBcVp5QUdXOVU4WnlBYTFhWG5wMkFFWUgySXNLWlRDU1Q5ZmdybEtBWUxwT0QwZzhZTkRjKzMvClhWVlhmUUtCZ1FDK2EvQklqZ1JtOHlRZ3pxcWxaTnpZZ3Rpd2hyaDFoSENZT0RrckRRcXZISkNaa3Z3UHBZWlcKMjNyVDQ1MkJKc1MwVExrMmtZMkRoUEhuWmRwWnZtMm1YNlhqc3ptdTRHZWtOTjh6VDhDY1gvMXFrbGo4eEdKRwpwalBtMXF2YnZVa0dqR3Zzb2JRL0JTOW1ZTW9iVENuNjFIaUJFdE1KM2hXR1VOcmppMVBFdWc9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+kind: Secret
+metadata:
+  name: carrier-wbssecret
+  namespace: kube-system
+type: Opaque
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: carrier-webhook
+  namespace: kube-system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: carrier-webhook
+  template:
+    metadata:
+      labels:
+        app: carrier-webhook
+    spec:
+      serviceAccountName: carrier-webhook
+      containers:
+        - args:
+            - --tlscert=/root/cert.pem
+            - --tlskey=/root/key.pem
+            - --v=4
+            - --port=443
+            - --sidecar-image=ocgi/carrier-sdkserver:latest
+          image: ocgi/carrier-webhook:latest
+          imagePullPolicy: Always
+          name: webhook
+          ports:
+            - containerPort: 443
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: wbssecret
+      volumes:
+        - name: wbssecret
+          secret:
+            secretName: carrier-wbssecret
+            items:
+              - key: key.pem
+                path: key.pem
+              - key: cert.pem
+                path: cert.pem
