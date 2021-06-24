@@ -72,7 +72,6 @@ func EnsureDefaultsForSquad(squad *v1alpha1.Squad) *v1alpha1.Squad {
 	squadCopy := squad.DeepCopy()
 	ensureDefaultRevisionHistoryLimit(&squadCopy.Spec)
 	ensureDefaultStrategy(&squadCopy.Spec.Strategy)
-	ensureDefaultTemplateLabel(&squadCopy.Spec.Template, carrierutil.SquadNameLabelKey, squadCopy.Name)
 	if squadCopy.Spec.Selector == nil {
 		squadCopy.Spec.Selector = &metav1.LabelSelector{}
 	}

@@ -190,9 +190,6 @@ func filledSquad() *carrierv1alpha1.Squad {
 			Scheduling: carrierv1alpha1.MostAllocated,
 			Template: carrierv1alpha1.GameServerTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						carrierutil.SquadNameLabelKey: "test",
-					},
 				},
 				Spec: carrierv1alpha1.GameServerSpec{
 					Ports: []carrierv1alpha1.GameServerPort{
