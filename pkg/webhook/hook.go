@@ -55,7 +55,9 @@ const (
 	ExternalNetworkKey        = "carrier.ocgi.dev/external-network-type"
 	grpcPortKey               = "carrier.ocgi.dev/grpc-port"
 	httpPortKey               = "carrier.ocgi.dev/http-port"
-	sdkserverSidecarName      = "carrier-gameserver-sidecar"
+	cpuKey                    = "carrier.ocgi.dev/sdkserver-cpu"
+	memoryKey                 = "carrier.ocgi.dev/sdkserver-memory"
+	sdkServerSidecarName      = "carrier-gameserver-sidecar"
 	gsEnvKey                  = "GAMESERVER_NAME"
 	grpcPortEnv               = "CARRIER_SDK_GRPC_PORT"
 	httpPortEnv               = "CARRIER_SDK_HTTP_PORT"
@@ -432,7 +434,6 @@ func forPod(req *v1beta1.AdmissionRequest, config *SideCarConfig) ([]byte, field
 		klog.Errorf("Could not unmarshal raw object: %v", err)
 		return nil, nil, err
 	}
-
 	if req.Operation == v1beta1.Create {
 		// validate
 		opts := []option{
@@ -440,13 +441,14 @@ func forPod(req *v1beta1.AdmissionRequest, config *SideCarConfig) ([]byte, field
 			WithHealthCheck(),
 			WithEnvs(&pod),
 		}
-		if !config.CPU.IsZero() || !config.Memory.IsZero() {
+		cpu, memory := getRequests(config, &pod)
+		if !cpu.IsZero() || !memory.IsZero() {
 			opts = append(opts, WithResource(config))
 		}
 		httpPort, grpcPort := getPorts(config, &pod)
 		addPortEnv := func(pod *corev1.Pod) {
 			for i, c := range pod.Spec.Containers {
-				if c.Name == sdkserverSidecarName {
+				if c.Name == sdkServerSidecarName {
 					continue
 				}
 				envs := []corev1.EnvVar{
@@ -473,12 +475,9 @@ func forPod(req *v1beta1.AdmissionRequest, config *SideCarConfig) ([]byte, field
 
 func getPorts(config *SideCarConfig, pod *corev1.Pod) (int, int) {
 	httpPort, grpcPort := config.HttpPort, config.GrpcPort
-	if pod.Annotations == nil {
-		return httpPort, grpcPort
-	}
-	gprcStr, ok := pod.Annotations[grpcPortKey]
+	grpcStr, ok := pod.Annotations[grpcPortKey]
 	if ok {
-		grpcPortCustom, err := strconv.Atoi(gprcStr)
+		grpcPortCustom, err := strconv.Atoi(grpcStr)
 		if err == nil {
 			grpcPort = grpcPortCustom
 		}
@@ -491,4 +490,23 @@ func getPorts(config *SideCarConfig, pod *corev1.Pod) (int, int) {
 		}
 	}
 	return httpPort, grpcPort
+}
+
+func getRequests(config *SideCarConfig, pod *corev1.Pod) (resource.Quantity, resource.Quantity) {
+	cpu, memory := config.CPU, config.Memory
+	cpuStr, ok := pod.Annotations[cpuKey]
+	if ok {
+		cpuCustom, err := resource.ParseQuantity(cpuStr)
+		if err == nil {
+			cpu = cpuCustom
+		}
+	}
+	memoryStr, ok := pod.Annotations[memoryKey]
+	if ok {
+		memoryCustom, err := resource.ParseQuantity(memoryStr)
+		if err == nil {
+			memory = memoryCustom
+		}
+	}
+	return cpu, memory
 }

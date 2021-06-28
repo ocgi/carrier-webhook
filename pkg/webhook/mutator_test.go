@@ -16,11 +16,11 @@ package webhook
 
 import (
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	k8testing "k8s.io/kubernetes/pkg/scheduler/testing"
 
@@ -81,7 +81,7 @@ func TestEnsureSquad(t *testing.T) {
 // addSidecar add side car to test pod
 func addSidecar(pw *k8testing.PodWrapper) *k8testing.PodWrapper {
 	pw.Spec.Containers = append(pw.Spec.Containers, v1.Container{
-		Name:            sdkserverSidecarName,
+		Name:            sdkServerSidecarName,
 		ImagePullPolicy: v1.PullIfNotPresent,
 		VolumeMounts: []v1.VolumeMount{
 			{
@@ -110,7 +110,7 @@ func addHealthCheck(pw *k8testing.PodWrapper) *k8testing.PodWrapper {
 		FailureThreshold:    3,
 	}
 	for i, container := range pw.Pod.Spec.Containers {
-		if container.Name != sdkserverSidecarName {
+		if container.Name != sdkServerSidecarName {
 			continue
 		}
 		pw.Pod.Spec.Containers[i].LivenessProbe = livenessProbe
