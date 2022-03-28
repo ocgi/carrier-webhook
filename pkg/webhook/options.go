@@ -50,7 +50,7 @@ func WithImageName(sc *SideCarConfig) option {
 func WithHealthCheck() option {
 	return func(container *corev1.Container) {
 		livenessProbe := &corev1.Probe{
-			Handler: corev1.Handler{
+			ProbeHandler: corev1.ProbeHandler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: "/healthz",
 					Port: intstr.FromInt(8080),

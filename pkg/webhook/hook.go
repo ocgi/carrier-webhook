@@ -15,6 +15,7 @@
 package webhook
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -233,7 +234,7 @@ func (whsvr *webhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 }
 
 func (whsvr *webhookServer) createDefaultClusterRole() error {
-	_, err := whsvr.kubeClient.RbacV1().ClusterRoles().Create(defaultClusterRole())
+	_, err := whsvr.kubeClient.RbacV1().ClusterRoles().Create(context.TODO(), defaultClusterRole(), metav1.CreateOptions{})
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return err
 	}
@@ -249,7 +250,7 @@ func (whsvr *webhookServer) createSA(namespace string, saName string) error {
 		return err
 	}
 	if errors.IsNotFound(err) {
-		_, err = whsvr.kubeClient.CoreV1().ServiceAccounts(namespace).Create(defaultServiceAccount(namespace))
+		_, err = whsvr.kubeClient.CoreV1().ServiceAccounts(namespace).Create(context.TODO(), defaultServiceAccount(namespace), metav1.CreateOptions{})
 		if err != nil && !errors.IsAlreadyExists(err) {
 			return err
 		}
@@ -259,7 +260,7 @@ func (whsvr *webhookServer) createSA(namespace string, saName string) error {
 		return err
 	}
 	if errors.IsNotFound(err) {
-		_, err = whsvr.kubeClient.RbacV1().RoleBindings(namespace).Create(defaultRoleBinding(namespace))
+		_, err = whsvr.kubeClient.RbacV1().RoleBindings(namespace).Create(context.TODO(), defaultRoleBinding(namespace), metav1.CreateOptions{})
 		if err != nil && !errors.IsAlreadyExists(err) {
 			return err
 		}

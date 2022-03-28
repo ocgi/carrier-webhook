@@ -200,18 +200,18 @@ func ValidateSquadUpdate(oldSquad, newSquad *carrierv1alpha1.Squad) field.ErrorL
 }
 
 func validatePodTemplate(specTemplate *corev1.PodTemplate) field.ErrorList {
-	copy := specTemplate.DeepCopy()
+	template := specTemplate.DeepCopy()
 	coreTemp := &k8sapi.PodTemplate{}
-	copy.Namespace = "fake"
-	copy.Name = "fake"
-	k8sapiv1.SetObjectDefaults_PodTemplate(copy)
-	err := k8sapiv1.Convert_v1_PodTemplate_To_core_PodTemplate(copy, coreTemp, nil)
+	template.Namespace = "fake"
+	template.Name = "fake"
+	k8sapiv1.SetObjectDefaults_PodTemplate(template)
+	err := k8sapiv1.Convert_v1_PodTemplate_To_core_PodTemplate(template, coreTemp, nil)
 	if err != nil {
 		klog.Errorf(err.Error())
 		return []*field.Error{field.InternalError(field.NewPath("PodTemplate"), err)}
 	}
 
-	return apicorevalidation.ValidatePodTemplate(coreTemp)
+	return apicorevalidation.ValidatePodTemplate(coreTemp, apicorevalidation.PodValidationOptions{})
 }
 
 func validateContainerName(podTemplateSpec *corev1.PodTemplateSpec) field.ErrorList {
