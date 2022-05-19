@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -149,11 +149,11 @@ func (whsvr *webhookServer) Serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var admissionResponse *v1beta1.AdmissionResponse
-	ar := v1beta1.AdmissionReview{}
+	var admissionResponse *admissionv1.AdmissionResponse
+	ar := admissionv1.AdmissionReview{}
 	if _, _, err := deserializer.Decode(body, nil, &ar); err != nil {
 		klog.Errorf("Can't decode body: %v", err)
-		admissionResponse = &v1beta1.AdmissionResponse{
+		admissionResponse = &admissionv1.AdmissionResponse{
 			Result: &metav1.Status{
 				Message: err.Error(),
 			},
@@ -164,15 +164,14 @@ func (whsvr *webhookServer) Serve(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	admissionReview := v1beta1.AdmissionReview{}
 	if admissionResponse != nil {
-		admissionReview.Response = admissionResponse
+		ar.Response = admissionResponse
 		if ar.Request != nil {
-			admissionReview.Response.UID = ar.Request.UID
+			ar.Response.UID = ar.Request.UID
 		}
 	}
 
-	resp, err := json.Marshal(admissionReview)
+	resp, err := json.Marshal(ar)
 	if err != nil {
 		klog.Errorf("Can't encode response: %v", err)
 		http.Error(w, fmt.Sprintf("could not encode response: %v", err), http.StatusInternalServerError)
@@ -184,7 +183,7 @@ func (whsvr *webhookServer) Serve(w http.ResponseWriter, r *http.Request) {
 }
 
 // mutate will validate and mutate GameSerer, GameServerSet, Squad
-func (whsvr *webhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
+func (whsvr *webhookServer) mutate(ar *admissionv1.AdmissionReview) *admissionv1.AdmissionResponse {
 	req := ar.Request
 
 	klog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v UID=%v Operation=%v UserInfo=%v",
@@ -219,18 +218,21 @@ func (whsvr *webhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 		result.Message = err.Error()
 		finalErr := errors.NewInvalid(schema.GroupKind{Group: carrier.GroupName, Kind: ar.Kind}, ar.Request.Name, el)
 		result.Details.Causes = finalErr.ErrStatus.Details.Causes
-		return &v1beta1.AdmissionResponse{
+		return &admissionv1.AdmissionResponse{
 			Allowed: false,
 			Result:  &result,
 		}
 	}
-	jsonPatch := v1beta1.PatchTypeJSONPatch
-	return &v1beta1.AdmissionResponse{
-		Allowed:   true,
-		Result:    &result,
-		Patch:     patch,
-		PatchType: &jsonPatch,
+	ret := &admissionv1.AdmissionResponse{
+		Allowed: true,
+		Result:  &result,
 	}
+	if len(patch) != 0 {
+		pType := admissionv1.PatchTypeJSONPatch
+		ret.PatchType = &pType
+		ret.Patch = patch
+	}
+	return ret
 }
 
 func (whsvr *webhookServer) createDefaultClusterRole() error {
@@ -268,7 +270,7 @@ func (whsvr *webhookServer) createSA(namespace string, saName string) error {
 	return nil
 }
 
-func (whsvr *webhookServer) forSquad(req *v1beta1.AdmissionRequest) ([]byte, field.ErrorList, error) {
+func (whsvr *webhookServer) forSquad(req *admissionv1.AdmissionRequest) ([]byte, field.ErrorList, error) {
 	var squad, oldSquad v1alpha1.Squad
 	if err := json.Unmarshal(req.Object.Raw, &squad); err != nil {
 		klog.Errorf("Could not unmarshal raw object: %v", err)
@@ -278,7 +280,7 @@ func (whsvr *webhookServer) forSquad(req *v1beta1.AdmissionRequest) ([]byte, fie
 		klog.Errorf("Could create service account: %v", err)
 		return nil, nil, err
 	}
-	if req.Operation == v1beta1.Create {
+	if req.Operation == admissionv1.Create {
 		newSquad := EnsureDefaultsForSquad(&squad)
 		// validate
 		errs := ValidateSquad(newSquad)
@@ -290,7 +292,7 @@ func (whsvr *webhookServer) forSquad(req *v1beta1.AdmissionRequest) ([]byte, fie
 		return patch, nil, err
 	}
 
-	if req.Operation == v1beta1.Update {
+	if req.Operation == admissionv1.Update {
 		if err := json.Unmarshal(req.OldObject.Raw, &oldSquad); err != nil {
 			klog.Errorf("Could not unmarshal raw object: %v", err)
 			return nil, nil, err
@@ -307,7 +309,7 @@ func (whsvr *webhookServer) forSquad(req *v1beta1.AdmissionRequest) ([]byte, fie
 	return nil, nil, nil
 }
 
-func (whsvr *webhookServer) forGameServerSet(req *v1beta1.AdmissionRequest) ([]byte, field.ErrorList, error) {
+func (whsvr *webhookServer) forGameServerSet(req *admissionv1.AdmissionRequest) ([]byte, field.ErrorList, error) {
 	var gameServerSet, oldGameServerSet v1alpha1.GameServerSet
 	if err := json.Unmarshal(req.Object.Raw, &gameServerSet); err != nil {
 		klog.Errorf("Could not unmarshal raw object: %v", err)
@@ -318,7 +320,7 @@ func (whsvr *webhookServer) forGameServerSet(req *v1beta1.AdmissionRequest) ([]b
 		klog.Errorf("Could create service account: %v", err)
 		return nil, nil, err
 	}
-	if req.Operation == v1beta1.Create {
+	if req.Operation == admissionv1.Create {
 		newGameServerSet := EnsureDefaultsForGameServerSet(&gameServerSet)
 		// validate
 		errs := ValidateGameServerSet(newGameServerSet)
@@ -328,7 +330,7 @@ func (whsvr *webhookServer) forGameServerSet(req *v1beta1.AdmissionRequest) ([]b
 		patch, err := util.CreateJsonPatch(gameServerSet, newGameServerSet)
 		return patch, nil, err
 	}
-	if req.Operation == v1beta1.Update {
+	if req.Operation == admissionv1.Update {
 		if err := json.Unmarshal(req.OldObject.Raw, &oldGameServerSet); err != nil {
 			klog.Errorf("Could not unmarshal old raw object: %v", err)
 			return nil, nil, err
@@ -342,7 +344,7 @@ func (whsvr *webhookServer) forGameServerSet(req *v1beta1.AdmissionRequest) ([]b
 	return nil, nil, nil
 }
 
-func (whsvr *webhookServer) forGameServer(req *v1beta1.AdmissionRequest) ([]byte, field.ErrorList, error) {
+func (whsvr *webhookServer) forGameServer(req *admissionv1.AdmissionRequest) ([]byte, field.ErrorList, error) {
 	var gameSvr, oldGameSvr v1alpha1.GameServer
 	if err := json.Unmarshal(req.Object.Raw, &gameSvr); err != nil {
 		klog.Errorf("Could not unmarshal raw object: %v", err)
@@ -352,7 +354,7 @@ func (whsvr *webhookServer) forGameServer(req *v1beta1.AdmissionRequest) ([]byte
 		klog.Errorf("Could create service account: %v", err)
 		return nil, nil, err
 	}
-	if req.Operation == v1beta1.Create {
+	if req.Operation == admissionv1.Create {
 		newGameServer := EnsureDefaultForGameServer(&gameSvr)
 		// validate
 		errs := ValidateGameServer(newGameServer)
@@ -363,7 +365,7 @@ func (whsvr *webhookServer) forGameServer(req *v1beta1.AdmissionRequest) ([]byte
 		return patch, nil, err
 	}
 
-	if req.Operation == v1beta1.Update {
+	if req.Operation == admissionv1.Update {
 		if err := json.Unmarshal(req.OldObject.Raw, &oldGameSvr); err != nil {
 			klog.Errorf("Could not unmarshal raw object: %v", err)
 			return nil, nil, err
@@ -429,13 +431,13 @@ func defaultServiceAccount(namespace string) *corev1.ServiceAccount {
 	}
 }
 
-func forPod(req *v1beta1.AdmissionRequest, config *SideCarConfig) ([]byte, field.ErrorList, error) {
+func forPod(req *admissionv1.AdmissionRequest, config *SideCarConfig) ([]byte, field.ErrorList, error) {
 	var pod corev1.Pod
 	if err := json.Unmarshal(req.Object.Raw, &pod); err != nil {
 		klog.Errorf("Could not unmarshal raw object: %v", err)
 		return nil, nil, err
 	}
-	if req.Operation == v1beta1.Create {
+	if req.Operation == admissionv1.Create {
 		// validate
 		opts := []option{
 			WithImageName(config),
